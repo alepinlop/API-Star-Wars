@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>Envio de parametros con AJAX externo</title>
+	<style type="text/css">
+	.estilo_Tabla_1 {
+		font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+		width: 70%;
+		border-collapse: collapse;
+	}
+	
+	.estilo_Tabla_1 td {
+		font-size: 1em;
+		border: 1px solid #98bf21;
+		padding: 4px;
+	}
+	
+	.estilo_Tabla_1 th {
+		border: 1px solid #98bf21;
+		font-size: 1.2em;
+		padding: 5px;
+		background-color: #A7C942;
+		color: #ffffff;
+	}
+	
+	.estilo_Tabla_1 tr td {
+		color: #000000;
+		
+		background-color: #EAF2D3;
+	}
+	
+	caption {
+		caption-side: bottom;
+		color: green;
+	}
+	</style>
+	
+	<script type="text/javascript">
+		var peti = new XMLHttpRequest();
+		var peti2 = new XMLHttpRequest();
+		var peti3 = new XMLHttpRequest();
+
+		window.onload = () => {
+		//	peti =  // Crear objeto XMLHttpRequest
+			//var peti2 = new XMLHttpRequest(); // Crear objeto XMLHttpRequest para el personaje
+
+			peti.onreadystatechange = pintaPersonajes; // Asignar la función para llamar los personajes de la tabla
+			//peti2.onreadystatechange = cargarPersonaje; // Asignar la función para llamar los datos del personaje
+
+			// Realizar peticiones HTTP
+			peti.open('GET', 'https://swapi.tech/api/people/?format=json');
+			peti.send();
+
+			//peti2.open('GET', 'https://swapi.tech/api/people/1?format=json'); // Cambiar el ID para obtener otro personaje
+			//peti2.send();
+		}
+
+		const pintaPersonajes = () => {
+			if(peti.readyState == 4) {
+				if (peti.status == 200) {
+					console.log(peti.responseText);
+					//Aquí metemos el código para poner
+					// los personajes en la tabla.
+					let pers = JSON.parse(peti.responseText); // Hace una llamada a los elementos de la API
+
+					let tabla = document.getElementById("cuerpoPersonajes"); // Llamada a la tabla
+
+					//console.log("personajes", pers.results);
+
+					// Limpiamos la tabla antes de rellenar
+					tabla.innerHTML = '';
+
+
+					// Para cada elemento de los personajes se crea una fila y columnas
+					pers.results.forEach(ele => { // Para cada personaje se hace lo siguiente
+						console.log(ele);
+						var tr = document.createElement("tr"); // Representa cada fila
+
+						// Nombre
+						var tdNombre = document.createElement("td"); // Representa la columna nombre
+						tdNombre.innerHTML = ele.name;
+						tr.appendChild(tdNombre);
+
+						// URL personaje
+						var tdURL = document.createElement("td");
+						let enlacePersonaje = document.createElement("a"); // Crea un elemento enlace
+						enlacePersonaje.href = '#';
+						enlacePersonaje.innerHTML = ele.url; // Añade la URL del personaje
+						enlacePersonaje.onclick = function (event){
+							event.preventDefault();
+							cargarPersonaje(ele.url); // Llama a la API del personaje
+						};
+
+						tdURL.appendChild(enlacePersonaje);
+						tr.appendChild(tdURL);
+
+						// Añadimos la fila a la tabla
+						tabla.appendChild(tr);
+
+					});
+				}
+			}
+		}
+
+		const cargarPersonaje = (url) => {
+			console.log("cargarPersonaje: ", url);
+
+			peti2.onreadystatechange = pintaDetallePersonaje; 
+			peti2.open('GET', url); // Cambiar el ID para obtener otro personaje
+			peti2.send();
+
+		}
+
+		const cargarPlaneta = (url) => {
+			console.log("cargarPlaneta: ", url);
+
+			peti3.onreadystatechange = pintaDetallePlaneta; 
+			peti3.open('GET', url); // Cambiar el ID para obtener otro personaje
+			peti3.send();
+		}
+	
+		const pintaDetallePersonaje = () => {
+			// Aquí puedes agregar el código para mostrar los detalles del personaje
+			
+
+			if(peti2.readyState == 4) {
+				if (peti2.status == 200) {
+					// console.log(peti2.responseText);
+					// Aquí metemos el código para poner los personajes en el div.
+					let pers = JSON.parse(peti2.responseText); // Hace una llamada a los elementos de la API
+					//console.log("personajes", pers);
+					let persona = pers.result.properties; // Accedemos a las propiedades del personaje
+					console.log("personajes", persona);
+					let divPersonaje = document.getElementById("datosPersonaje"); // Llamada a la informacion del personaje
+
+					//	console.log("personajes", pers.result);
+
+					// URL para el planeta
+					let enlacePlaneta = document.createElement("a"); // Crea un elemento enlace
+					enlacePlaneta.href = '#';
+					enlacePlaneta.innerHTML = persona.homeworld; // Añade la URL del planeta
+					enlacePlaneta.onclick = function (event){
+						event.preventDefault();
+						cargarPlaneta(persona.homeworld); // Llama a la API del planeta
+					};
+
+					// Mostrar los datos del personaje
+					divPersonaje.innerHTML = `
+						<p><strong>Nombre:</strong> ${persona.name}</p>
+						<p><strong>Género:</strong> ${persona.gender}</p>
+						<p><strong>Altura:</strong> ${persona.height} cm</p>
+						<p><strong>Peso:</strong> ${persona.mass} kg</p>
+						<p><strong>Año de nacimiento:</strong> ${persona.birth_year}</p>
+					`;
+
+					let pPlaneta = document.createElement("p");
+					pPlaneta.innerHTML = "<strong>Planeta natal:</strong> ";
+					pPlaneta.appendChild(enlacePlaneta);
+					divPersonaje.appendChild(pPlaneta);
+				}
+			}
+		}
+
+		const pintaDetallePlaneta = () => {
+			// Aquí puedes agregar el código para mostrar los detalles del planeta
+			
+
+			if(peti3.readyState == 4) {
+				if (peti3.status == 200) {
+					// console.log(peti2.responseText);
+					// Aquí metemos el código para poner los personajes en el div.
+					let parsear = JSON.parse(peti3.responseText); // Hace una llamada a los elementos de la API
+					console.log("planeta", parsear);
+					let planeta = parsear.result.properties; // Accedemos a las propiedades del planeta
+					console.log("planeta", planeta);
+					let divPlaneta = document.getElementById("datosPlaneta"); // Llamada a la informacion del planeta
+
+					// Mostrar los datos del planeta
+					divPlaneta.innerHTML = `
+						<p><strong>Nombre:</strong> ${planeta.name}</p>
+						<p><strong>Clima:</strong> ${planeta.climate}</p>
+						<p><strong>Terreno:</strong> ${planeta.terrain}</p>
+						<p><strong>Población:</strong> ${planeta.population}</p>
+					`;
+				}
+			}
+		}
+	
+	
+	</script>
+</head>
+
+<body>
+	<h3>Ejemplo de llamada a la API de STAR WARS</h3>
+	<br/>
+
+	<p>
+		<table id="personajes" class="estilo_Tabla_1">
+			<caption>Personajes STAR WARS</caption>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>URL</th>
+          <!--<th>Peso</th>
+		<th>Nacimiento</th>
+		<th>Género</th>
+		<th>Homeworld</th>-->
+        </tr>
+      </thead>
+      <tbody id="cuerpoPersonajes">
+        
+      </tbody>
+    </table>
+	</p>
+
+	<br/>
+	<h3><strong>Datos del personaje: </strong></h3>
+	<div id="datosPersonaje">Información del personaje</div>
+	<!-- Aquí se mostrarán los datos del personaje seleccionado -->
+
+	<br/>
+	<h3><strong>Datos del planeta: </strong></h3>
+	<div id="datosPlaneta">Información del planeta</div>
+	<!-- Aquí se mostrarán los datos del planeta seleccionado -->
+</body>
+</html>
